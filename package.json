@@ -1,0 +1,19 @@
+{
+  "name": "discord-currency",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "jsonfile": "^6.1.0",
+    "mongoose": "^6.0.6",
+    "puppeteer": "^10.2.0"
+  }
+}
