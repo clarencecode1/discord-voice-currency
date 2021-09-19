@@ -144,3 +144,25 @@ module.exports.givePoints = async (message, user_id, points) => {
 
   return finishReaction;
 };
+
+module.exports.takePoints = async (message, user_id, points) => {
+  let _user = await User.findOne({ user_id });
+
+  // If they do not exist, based on the fact that they have 0 points they probably can't afford it
+  if (!_user) {
+    return false
+  } else {
+    // They exist, check if they have enough points.
+    if(_user.points > parseInt(points)) {
+      _user.points -= parseInt(points);
+    }
+  }
+
+  try {
+    await _user.save();
+    return _user.points
+  } catch (err) {
+    console.log(err);
+    return false
+  }
+}

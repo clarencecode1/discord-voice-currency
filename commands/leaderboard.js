@@ -16,7 +16,7 @@ module.exports = {
 }; */
 
 module.exports.command = async (message) => {
-    return
+  return;
 
   let finishReaction = finished;
   let points = 0;

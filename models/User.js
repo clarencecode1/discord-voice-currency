@@ -5,11 +5,13 @@ const userSchema = new Schema({
     guild_id: {
         type: String,
         required: true,
+        index: true,
     },
     user_id: {
         type: String,
         required: true,
         unique: true,
+        index: true,
     },
     points: {
         type: Number,

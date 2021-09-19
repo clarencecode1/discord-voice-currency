@@ -7,7 +7,16 @@ const { incorrectSyntax } = require("../utilities/emojis");
 const { MessageEmbed } = require("discord.js");
 
 module.exports = {
-  aliases: ["give", "givepoints", "add", "addpoints", "givebal", "givebalance", "addbal", "addbalance"],
+  aliases: [
+    "give",
+    "givepoints",
+    "add",
+    "addpoints",
+    "givebal",
+    "givebalance",
+    "addbal",
+    "addbalance",
+  ],
   event: "messageCreate",
 };
 
@@ -18,20 +27,13 @@ const missingArguments = `Invalid syntax. You need to pass in two arguments: \`-
 }; */
 
 module.exports.command = async (message) => {
-  // User needs to be an admin
-  let finishReaction = incorrectSyntax;
-  if (!utils.isTrusted(message)) {
-    utils.react(message, finishReaction);
-    return;
-  }
-
+  let finishReaction;
   let commandArgs = utils.parseArgs(message.content);
 
   // Check for missing flags, give help on how to use the command.
   if (!commandArgs.u || !commandArgs.p) {
     utils.react(message, finishReaction);
     message.channel.send(missingArguments);
-    console.log(commandArgs)
     return;
   }
 
@@ -49,7 +51,11 @@ module.exports.command = async (message) => {
     return;
   }
 
-  finishReaction = await utils.givePoints(message, commandArgs.u, commandArgs.p)
+  finishReaction = await utils.givePoints(
+    message,
+    commandArgs.u,
+    commandArgs.p
+  );
 
   utils.react(message, finishReaction);
 };

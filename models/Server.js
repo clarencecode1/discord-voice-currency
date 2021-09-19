@@ -6,6 +6,7 @@ const serverSchema = new Schema({
         type: String,
         required: true,
         unique: true,
+        index: true,
     },
     guild_name: {
         type: String,

@@ -1,9 +1,9 @@
 "use strict";
 
-
 const config = require("./utilities/config").config;
 const utils = require("./utilities/utils");
 const { incorrectSyntax, waiting } = require("./utilities/emojis");
+const { pullAll } = require("./db/pull");
 
 const { Client, Intents } = require("discord.js");
 const connectDB = require("./utilities/mongo");
@@ -27,13 +27,16 @@ client.modules = {
   voiceStateUpdate: {},
 };
 
-const registerCommand = (module) => {
+const registerCommand = (module, isAdminCommand = false) => {
   if (module.func && typeof module.func === "function") {
     client.modules[module.event][module.aliases[0]] = module.func;
   }
   if (module.command && typeof module.command === "function") {
     module.aliases.map((alias) => {
-      client.commands["messageCreate"][alias] = module.command;
+      client.commands["messageCreate"][alias] = {
+        command: module.command,
+        isAdminCommand,
+      };
     });
   } else {
     module.aliases.map((alias) => {
@@ -55,6 +58,12 @@ client.on("ready", () => {
   for (let i = 0; i < _cmds.length; i++) {
     let cmd = require(`./commands/${_cmds[i]}`);
     registerCommand(cmd);
+  }
+
+  _cmds = require("fs").readdirSync("./admin-commands");
+  for (let i = 0; i < _cmds.length; i++) {
+    let cmd = require(`./admin-commands/${_cmds[i]}`);
+    registerCommand(cmd, true);
   }
 
   console.log("Logged in as " + client.user.tag + " successfully.");
@@ -86,10 +95,21 @@ client.on("messageCreate", (message) => {
       return;
     }
 
-    if (typeof client.commands["messageCreate"][command] === "function") {
+    // Real command, verify if admin
+    if (
+      typeof client.commands["messageCreate"][command].command === "function"
+    ) {
+      // User needs to be an admin
+      if (
+        client.commands["messageCreate"][command].isAdminCommand &&
+        !utils.isTrusted(message)
+      ) {
+        message.react(incorrectSyntax);
+        return;
+      }
       // React to message with an emoji indicating the command is being executed
       message.react(waiting);
-      client.commands["messageCreate"][command](message);
+      client.commands["messageCreate"][command].command(message);
     }
   }
 });
@@ -115,5 +135,7 @@ client.on("messageUpdate", async(oldMessage, newMessage) => {
     })
 }) */
 
-connectDB();
-client.login(config.token);
+connectDB().then(async () => {
+  await pullAll();
+  client.login(config.token);
+});
