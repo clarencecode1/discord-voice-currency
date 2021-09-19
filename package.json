@@ -18,5 +18,8 @@
     "jsonfile": "^6.1.0",
     "mongoose": "^6.0.6",
     "puppeteer": "^10.2.0"
+  },
+  "devDependencies": {
+    "csv-parser": "^3.0.0"
   }
 }

@@ -17,6 +17,10 @@ const serverSchema = new Schema({
         type: Boolean,
         required: true,
     },
+    bot_channel: {
+        type: String,
+        required: true,
+    }
 })
 
 module.exports = mongoose.model("Server", serverSchema)

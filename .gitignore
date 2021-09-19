@@ -2,3 +2,6 @@ node_modules/
 temp/*
 test.js
 .env
+
+csv.js
+*.csv

@@ -15,7 +15,8 @@ const alreadyIsTracked = `This server is already being tracked, run \`${config.p
 
 const differenceInSeconds = (oldDate, newDate) => {
   const difference = Math.abs(newDate - oldDate);
-  return (difference / 1000 / 60);
+  let points = (difference / 1000 / 60);
+  return Math.round((points + Number.EPSILON) * 100) / 100
 };
 
 const isActive = (voiceState) => {
@@ -87,11 +88,13 @@ module.exports.command = async (message) => {
       guild_id,
       guild_name,
       is_enabled: true,
+      bot_channel: message.channel.id,
     });
   } // Server already exists, enable or send message
   else {
     if (!_server.is_enabled) {
       _server.is_enabled = true;
+      _server.bot_channel = message.channel.id;
     } else {
       message.channel.send(alreadyIsTracked);
     }

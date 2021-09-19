@@ -155,6 +155,8 @@ module.exports.takePoints = async (message, user_id, points) => {
     // They exist, check if they have enough points.
     if(_user.points > parseInt(points)) {
       _user.points -= parseInt(points);
+    } else {
+      return false
     }
   }
 
