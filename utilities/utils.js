@@ -7,36 +7,11 @@ module.exports.sendDelete = async (
   string,
   time = config.message_life * 1000
 ) => {
-  message.channel
-    .send(string)
-    .then((msg) => {
-      msg.delete({ timeout: time });
-    })
-    .catch(console.error);
-};
+  let _msg = await message.channel.send(string);
 
-module.exports.editDelete = async (
-  message,
-  string,
-  time = config.message_life * 1000
-) => {
-  if (message.editable) {
-    message
-      .edit(string)
-      .then((msg) => {
-        msg.delete({ timeout: time });
-      })
-      .catch(console.error);
-  } else {
-    message.channel.send(`_ _`).then((msg) => {
-      msg
-        .edit(string)
-        .then((msg) => {
-          msg.delete({ timeout: time });
-        })
-        .catch(console.error);
-    });
-  }
+  setTimeout(() => {
+      _msg.delete();
+  }, time);
 };
 
 module.exports.edit = async (message, string) => {
@@ -122,7 +97,7 @@ module.exports.givePoints = async (message, user_id, points) => {
   if (!_user) {
     _user = new User({
       guild_id: message.guildId,
-      user_id: commandArgs.u,
+      user_id: user_id,
       points: parseInt(points),
       is_active: false,
       is_active_since: Date.now(),
@@ -140,7 +115,7 @@ module.exports.givePoints = async (message, user_id, points) => {
     console.log(err);
   }
 
-  message.channel.send(`New balance is ${_user.points}`);
+  //message.channel.send(`New balance is ${_user.points}`);
 
   return finishReaction;
 };
@@ -150,21 +125,21 @@ module.exports.takePoints = async (message, user_id, points) => {
 
   // If they do not exist, based on the fact that they have 0 points they probably can't afford it
   if (!_user) {
-    return false
+    return false;
   } else {
     // They exist, check if they have enough points.
-    if(_user.points > parseInt(points)) {
+    if (_user.points > parseInt(points)) {
       _user.points -= parseInt(points);
     } else {
-      return false
+      return false;
     }
   }
 
   try {
     await _user.save();
-    return _user.points
+    return _user.points;
   } catch (err) {
     console.log(err);
-    return false
+    return false;
   }
-}
+};

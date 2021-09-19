@@ -1,10 +1,10 @@
 "use strict";
 
-const config = require("./utilities/config").config;
+const {config} = require("./utilities/config");
 const utils = require("./utilities/utils");
 const { incorrectSyntax, waiting } = require("./utilities/emojis");
 const { pullAll } = require("./db/pull");
-
+// const { importFromCSV } = require("./csv")
 const { Client, Intents } = require("discord.js");
 const connectDB = require("./utilities/mongo");
 
@@ -71,6 +71,11 @@ client.on("ready", () => {
 
 // Handle all commands
 client.on("messageCreate", (message) => {
+
+  /* if(message.content == "import csv" && utils.isTrusted(message)) {
+    importFromCSV(message, "statbot_top_member_voice.csv")
+  } */
+
   // Pass on message to all passive commands
   Object.keys(client.modules["messageCreate"]).map((key) => {
     client.modules["messageCreate"][key](message);

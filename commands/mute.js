@@ -33,7 +33,7 @@ module.exports.command = async (message) => {
     user_id = commandArgs;
     // TODO: I should check if this user is in the guild, just to make sure people don't add random things to the database
   } else {
-    message.reply(missingArguments);
+    utils.sendDelete(message, missingArguments);
     return;
   }
 
@@ -71,12 +71,14 @@ module.exports.command = async (message) => {
       if (success) {
         // Try to mute them
         let guildMember = await message.guild.members.fetch(user_id);
-        let voiceState =  guildMember.voice
+        let voiceState = guildMember.voice;
         voiceState.setMute(
           true,
           `Muted by ${message.member.displayName} for ${price}`
         );
-        message.reply(
+        initialMessage.delete();
+        utils.sendDelete(
+          message,
           `Successfully muted user.\nNew balance is ${success}`
         );
 
@@ -87,10 +89,14 @@ module.exports.command = async (message) => {
           );
         }, 1000 * duration);
       } else {
-        message.reply(`Not enough balance.`);
+        utils.sendDelete(message, `Not enough balance.`);
       }
     } else {
-      message.reply("No? Ok.");
+      try {
+        initialMessage.delete();
+      } catch (err) {
+        console.log(err);
+      }
     }
   });
 };
