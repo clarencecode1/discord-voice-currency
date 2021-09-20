@@ -32,8 +32,8 @@ const missingArguments =
       user_id = commandArgs;
       // TODO: I should check if this user is in the guild, just to make sure people don't add random things to the database
     } else {
-      utils.sendDelete(message, missingArguments);
-      return;
+      user = message.author
+      user_id = message.author.id
     }
   
     let embed = new MessageEmbed()
