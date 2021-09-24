@@ -3,6 +3,7 @@
 const config = require("../utilities/config").config;
 const Role = require("../models/Role");
 const utils = require("../utilities/utils");
+const { catchError } = utils;
 const { incorrectSyntax, finished } = require("../utilities/emojis");
 const { MessageEmbed } = require("discord.js");
 
@@ -74,7 +75,7 @@ const missingArguments =
           voiceState.setMute(
             false,
             `Unmuted by ${message.member.displayName} for ${price}`
-          );
+          ).catch(catchError);
           initialMessage.delete();
           utils.sendDelete(
             message,

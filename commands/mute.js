@@ -3,6 +3,7 @@
 const config = require("../utilities/config").config;
 const Role = require("../models/Role");
 const utils = require("../utilities/utils");
+const { catchError } = utils;
 const { incorrectSyntax, finished } = require("../utilities/emojis");
 const { MessageEmbed } = require("discord.js");
 
@@ -72,10 +73,9 @@ module.exports.command = async (message) => {
         // Try to mute them
         let guildMember = await message.guild.members.fetch(user_id);
         let voiceState = guildMember.voice;
-        voiceState.setMute(
-          true,
-          `Muted by ${message.member.displayName} for ${price}`
-        );
+        voiceState
+          .setMute(true, `Muted by ${message.member.displayName} for ${price}`)
+          .catch(catchError);
         initialMessage.delete();
         utils.sendDelete(
           message,
