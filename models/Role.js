@@ -31,6 +31,7 @@ const roleSchema = new Schema({
   multiplier: {
     type: Number,
     required: true,
+    default: 1,
   },
   permissions: {
     type: [PermissionsSchema],

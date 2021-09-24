@@ -13,3 +13,7 @@ module.exports.purple = '🟣'
 module.exports.red = '🔴'
 
 module.exports.writing_hand = '✍️'
+
+module.exports.rock = '🪨'
+module.exports.paper = '🗞️'
+module.exports.scissors = '✂️'

@@ -10,7 +10,7 @@ module.exports.sendDelete = async (
   let _msg = await message.channel.send(string);
 
   setTimeout(() => {
-      _msg.delete();
+    _msg.delete();
   }, time);
 };
 
@@ -86,6 +86,24 @@ module.exports.getUser = async (message, id) => {
   return message.client.users.fetch(id);
 };
 
+module.exports.getPoints = async (message, user_id) => {
+  // Look for the user with the given uid
+
+  let _user = await User.findOne({ user_id });
+
+  if (!_user) {
+    _user = new User({
+      guild_id: message.guildId,
+      user_id: user_id,
+      points: 0,
+      is_active: false,
+      is_active_since: Date.now(),
+    });
+  }
+
+  return _user.points;
+};
+
 module.exports.givePoints = async (message, user_id, points) => {
   let finishReaction;
   // Look for the user with the given uid
@@ -142,4 +160,8 @@ module.exports.takePoints = async (message, user_id, points) => {
     console.log(err);
     return false;
   }
+};
+
+module.exports.catchError = (err) => {
+  console.log(err);
 };
