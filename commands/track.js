@@ -22,8 +22,8 @@ const differenceInSeconds = (oldDate, newDate) => {
 const isActive = (voiceState) => {
   // Double negation to convert to boolean, might be confusing at first.
   const isInVoice = !!voiceState.channel;
-  const isNotDeaf = !voiceState.deaf;
-  return isInVoice && isNotDeaf;
+  //const isNotDeaf = !voiceState.deaf;
+  return isInVoice;
 };
 
 module.exports.func = async (oldState, newState) => {
@@ -55,7 +55,11 @@ module.exports.func = async (oldState, newState) => {
 
     // Assign points if they were previously active
     if (_user.is_active) {
-      let newPoints = differenceInSeconds(_user.is_active_since, Date.now());
+      let multiplier = 1
+
+      multiplier += oldState.selfVideo ? .3 : 0
+      multiplier -= oldState.deaf ? .3 : 0
+      let newPoints = multiplier * differenceInSeconds(_user.is_active_since, Date.now());
       _user.points += newPoints;
     }
     // TODO: INCORPORATE ROLES FOR POINT MULTIPLIERS

@@ -5,10 +5,12 @@ const robSchema = new Schema({
   guild_id: {
     type: String,
     required: true,
+    index: true,
   },
   from_id: {
     type: String,
     required: true,
+    index: true,
   },
   to_id: {
     type: Number,
@@ -16,7 +18,7 @@ const robSchema = new Schema({
     default: 0,
     index: true,
   },
-  will_finish_at: {
+  started_at: {
     type: Date,
     required: true,
   },

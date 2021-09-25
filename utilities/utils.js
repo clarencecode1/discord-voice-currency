@@ -135,7 +135,7 @@ module.exports.givePoints = async (message, user_id, points) => {
 
   //message.channel.send(`New balance is ${_user.points}`);
 
-  return finishReaction;
+  return _user.points;
 };
 
 module.exports.takePoints = async (message, user_id, points) => {

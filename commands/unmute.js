@@ -10,7 +10,7 @@ const { MessageEmbed } = require("discord.js");
 const price = 85;
 
 module.exports = {
-  aliases: ["unmute", "unmuteuser", "simp"],
+  aliases: ["unmute", "unmuteuser"],
   event: "messageCreate",
 };
 

@@ -51,11 +51,9 @@ module.exports.command = async (message) => {
     return;
   }
 
-  finishReaction = await utils.givePoints(
-    message,
-    commandArgs.u,
-    commandArgs.p
-  );
+  utils.givePoints(message, commandArgs.u, commandArgs.p);
 
-  utils.react(message, finishReaction);
+  console.log(
+    `User ${message.member.displayName} gave ${commandArgs.p} points to ${commandArgs.u}`
+  );
 };
