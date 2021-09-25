@@ -17,3 +17,6 @@ module.exports.writing_hand = '✍️'
 module.exports.rock = '🪨'
 module.exports.paper = '🗞️'
 module.exports.scissors = '✂️'
+
+module.exports.one = '1️⃣'
+module.exports.two = '2️⃣'

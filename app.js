@@ -2,7 +2,7 @@
 
 const {config} = require("./utilities/config");
 const utils = require("./utilities/utils");
-const { incorrectSyntax, waiting } = require("./utilities/emojis");
+const { incorrectSyntax } = require("./utilities/emojis");
 const { pullAll } = require("./db/pull");
 // const { importFromCSV } = require("./csv")
 const { Client, Intents } = require("discord.js");
@@ -113,7 +113,6 @@ client.on("messageCreate", (message) => {
         return;
       }
       // React to message with an emoji indicating the command is being executed
-      message.react(waiting);
       client.commands["messageCreate"][command].command(message);
     }
   }

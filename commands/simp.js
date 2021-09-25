@@ -56,7 +56,7 @@ module.exports.command = async (message) => {
 
   let embed = new MessageEmbed()
     .setColor("RANDOM")
-    .setTitle(`Donate 💵 ${donation} to ${user.username}`)
+    .setTitle(`Donate 💵 ${donation} to ${user.username}?`)
     .addField("Your balance: ", `💵 ${userPoints}`)
     .setThumbnail(user.avatarURL());
   let initialMessage = await message.channel.send({ embeds: [embed] });
@@ -93,16 +93,19 @@ module.exports.command = async (message) => {
 
       if (success) {
         let userNewBalance = await utils.givePoints(message, user_id, donation);
-        utils.sendDelete(
-          message,
-          `Successfully gave 💵 ${donation} to ${user.tag}. Their new balance is 💵 ${userNewBalance}.`
-        );
+        let embed = new MessageEmbed()
+          .setColor("GREEN")
+          .setTitle(`Successfully gave 💵 ${donation} to ${user.tag}.`)
+          .addField("Your new balance: ", `💵 ${success}`)
+          .addField(`Their new balance:`, `💵 ${userNewBalance}.`)
+          .setThumbnail(user.avatarURL());
+        initialMessage.edit({ embeds: [embed] });
         return;
       } else {
-        utils.sendDelete(
-          message,
-          "Something went wrong, you probably don't have enough points."
-        );
+        let embed = new MessageEmbed()
+          .setColor("RED")
+          .setTitle(`Something went wrong.\nYou probably don't have enough points.`)
+        initialMessage.edit({ embeds: [embed] });
         return;
       }
     } else {

@@ -5,24 +5,26 @@ const Role = require("../models/Role");
 const utils = require("../utilities/utils");
 const { catchError } = utils;
 const { rock, paper, scissors } = require("../utilities/emojis");
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 
 module.exports = {
-  aliases: ["rps", "rock", "paper", "scissors"],
+  aliases: ["rps"],
   event: "messageCreate",
 };
 
 const MIN_BID = 1;
 const invalidValue = "Invalid bid.";
 const valueTooSmall = `Please specify a value higher than ${MIN_BID}.`;
-const missingArgs = `Missing arguments, try \`${config.prefix}${
-  module.exports.aliases[0]
-} ${MIN_BID * 2}\``;
+const missingArgs = `Missing arguments, try \`${config.prefix}${module.exports.aliases[0]} ${MIN_BID * 2}\``;
 
 const missingArguments = "Invalid syntax. You need to pass in these arguments:";
 
 module.exports.command = async (message) => {
   let commandArgs = utils.parseArgs(message.content);
+
+  let rockButton = new MessageButton().setCustomId("rock").setEmoji(rock).setStyle("PRIMARY");
+  let paperButton = new MessageButton().setCustomId("paper").setEmoji(paper).setStyle("PRIMARY");
+  let scissorsButton = new MessageButton().setCustomId("scissors").setEmoji(scissors).setStyle("PRIMARY");
 
   if (!commandArgs._.length) {
     utils.sendDelete(message, missingArgs);
@@ -42,9 +44,9 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let userPoints = await utils.getPoints(message, message.author.id)
+  let userPoints = await utils.getPoints(message, message.author.id);
 
-  if(bid > userPoints) {
+  if (bid > userPoints) {
     utils.sendDelete(message, `You only have ${userPoints}, you can't bet ${bid}.`);
     return;
   }
@@ -55,43 +57,59 @@ module.exports.command = async (message) => {
     .setTitle(`Rock, paper, scissors.`)
     .addField("Cost: ", `💵 ${bid}`)
     .setThumbnail(user.avatarURL());
-  let initialMessage = await message.channel.send({ embeds: [embed] });
-  initialMessage.react(rock);
-  initialMessage.react(paper);
-  initialMessage.react(scissors);
 
-  const filter = (reaction, user) => {
-    let emoji = reaction.emoji.toString();
-    return (
-      user === message.author &&
-      (emoji === rock || emoji === paper || emoji === scissors)
-    );
-  };
+  let row = new MessageActionRow().addComponents(rockButton, paperButton, scissorsButton);
 
-  const reactionCollector = initialMessage.createReactionCollector({
+  let initialMessage = await message.channel.send({
+    embeds: [embed],
+    components: [row],
+  });
+
+  const filter = (interaction) => interaction.user === message.author;
+
+  const buttonCollector = initialMessage.createMessageComponentCollector({
     filter,
   });
 
-  reactionCollector.on("collect", (reaction) => {
-    reactionCollector.stop(["Collected reaction"]);
+  buttonCollector.on("collect", async (interaction) => {
+    let selectedButton;
+
+    switch (interaction.customId) {
+      case "rock":
+        selectedButton = rockButton;
+        break;
+      case "paper":
+        selectedButton = paperButton;
+        break;
+      case "scissors":
+        selectedButton = scissorsButton;
+        break;
+    }
+
+    let row = new MessageActionRow().addComponents(selectedButton);
+
+    await interaction.update({ components: [row] });
+
+    console.log(`Collected ${interaction.customId}`);
+    buttonCollector.stop(["Collected reaction"]);
   });
 
-  reactionCollector.on("end", (collected, reason) => {
+  buttonCollector.on("end", (collected, reason) => {
     let rps = {};
 
-    rps[rock] = {
+    rps.rock = {
       wingsAgainst: scissors,
       losesAgainst: paper,
       drawsAgainst: rock,
     };
 
-    rps[paper] = {
+    rps.paper = {
       wingsAgainst: rock,
       losesAgainst: scissors,
       drawsAgainst: paper,
     };
 
-    rps[scissors] = {
+    rps.scissors = {
       wingsAgainst: paper,
       losesAgainst: rock,
       drawsAgainst: scissors,
@@ -103,27 +121,24 @@ module.exports.command = async (message) => {
 
     let choice = choices[random];
 
-    let playerChoice = collected.first().emoji.toString();
+    let playerChoice = collected.first().customId;
 
     if (rps[playerChoice].wingsAgainst === choice) {
       // win
       prize = bid;
-      embed = new MessageEmbed()
-        .setColor("GREEN")
-        .setTitle(`${choice}, you won!`);
+      embed = new MessageEmbed().setColor("GREEN").setTitle(`${choice}, you won!`);
     } else if (rps[playerChoice].losesAgainst === choice) {
       prize = -bid;
-      embed = new MessageEmbed()
-        .setColor("RED")
-        .setTitle(`${choice}, you lost`);
+      embed = new MessageEmbed().setColor("RED").setTitle(`${choice}, you lost`);
     } else {
       prize = 0;
-      embed = new MessageEmbed()
-        .setColor("DARK_BUT_NOT_BLACK")
-        .setTitle(`${choice}, draw`);
+      embed = new MessageEmbed().setColor("DARK_BUT_NOT_BLACK").setTitle(`${choice}, draw`);
     }
 
-    embed.setThumbnail(user.avatarURL()).addField("Prize: ", `💵 ${prize}`).addField("New balance: ", `💵 ${userPoints + prize}`);
+    embed
+      .setThumbnail(user.avatarURL())
+      .addField("Prize: ", `💵 ${prize}`)
+      .addField("New balance: ", `💵 ${userPoints + prize}`);
 
     initialMessage.edit({ embeds: [embed] });
 
