@@ -16,9 +16,7 @@ const MIN_BID = 1;
 const duration = 10;
 const invalidValue = "Invalid bid.";
 const valueTooSmall = `Please specify a value higher than ${MIN_BID}.`;
-const missingArgs = `Missing arguments, try \`${config.prefix}${
-  module.exports.aliases[0]
-} ${MIN_BID * 2}\``;
+const missingArgs = `Missing arguments, try \`${config.prefix}${module.exports.aliases[0]} ${MIN_BID * 2}\``;
 
 const missingArguments = "Invalid syntax. You need to pass in these arguments:";
 
@@ -41,15 +39,8 @@ module.exports.command = async (message) => {
     return;
   }
 
+  let totalBet = bid;
   let userPoints = await utils.getPoints(message, message.author.id);
-
-  if (bid > userPoints) {
-    utils.sendDelete(
-      message,
-      `You only have ${userPoints}, you can't bet ${bid}.`
-    );
-    return;
-  }
 
   let user = message.author;
   let embed = new MessageEmbed()
@@ -65,10 +56,12 @@ module.exports.command = async (message) => {
   initialMessage.react(one);
   initialMessage.react(two);
 
+  let result = Math.floor(Math.random() * 37);
+  console.log(result);
+
   let reactionsCollection = await initialMessage.awaitReactions({
     time: duration * 1000,
   });
-
 
   let table = [
     green, // 0
@@ -116,27 +109,75 @@ module.exports.command = async (message) => {
     black: "DARK_BUT_NOT_BLACK",
   };
 
-  let result = Math.floor(Math.random() * 37);
-  console.log(result);
+  let players = {};
+  
 
   reactionsCollection.map((reaction) => {
     // Iterate over all reactions
     let usersCollection = reaction.users.cache;
-    usersCollection = usersCollection.filter(
-      (user) => !user.bot
-    );
+    usersCollection = usersCollection.filter((user) => !user.bot);
 
     usersCollection.map((user) => {
-      console.log(`${user.tag}, ${reaction.emoji.toString()}`);
+      if(!players[user.tag]) {
+        players[user.tag] = 0
+      }
+      // Check colour
+      let reactionIsOdd = reaction.emoji.toString() === one;
+      let reactionIsEven = reaction.emoji.toString() === two;
+      let reactionIsColour = [green, red, black].includes(reaction.emoji.toString());
+
+      if (reactionIsColour) {
+        if (table[result] === reaction.emoji.toString()) {
+          if (win(message, user, userPoints, bid)) {
+            totalBet += bid;
+            let prize = reaction.emoji.toString() === green ? 16 * bid : bid;
+            userPoints += prize;
+            players[user.tag] +=  prize;
+          }
+        } else {
+          if (lose(message, user, userPoints, bid)) {
+            totalBet += bid;
+            let prize = bid;
+            userPoints -= prize;
+            players[user.tag] -=  prize;
+          }
+        }
+      } else if (reactionIsOdd || reactionIsEven) {
+        // Check even or odd
+        if ((reactionIsOdd && result % 2 === 1) || (reactionIsEven && result % 2 === 0)) {
+          if (win(message, user, userPoints, bid)) {
+            totalBet += bid;
+            let prize = bid;
+            userPoints += prize;
+            players[user.tag] += prize;
+          }
+        } else {
+          if (lose(message, user, userPoints, bid)) {
+            totalBet += bid;
+            let prize = bid;
+            userPoints -= prize;
+            players[user.tag] -= prize;
+          }
+        }
+      }
     });
   });
+
+  let bigField = ["\n"];
+
+  Object.keys(players).map((key, index) => {
+    bigField[index] = `**${key}**  -  💵 ${Math.round((players[key] + Number.EPSILON) * 100) / 100}`;
+  });
+
+  bigField = bigField.join("\n");
 
   embed = new MessageEmbed()
     .setColor(colours[table[result]])
     .setTitle(`Roulette table, react to bid.`)
-    .addField("Total sum played: ", `💵 ${bid}`, true)
+    .addField("Total sum played: ", `💵 ${totalBet}`, true)
     .addField("Result: ", `${table[result]} ${result}`, true)
-    .setThumbnail(user.avatarURL());
+    .addField(`All players: `, bigField)
+    .setThumbnail(initialMessage.author.avatarURL());
 
   // Edit message with results
   initialMessage.edit({ embeds: [embed] });
@@ -197,4 +238,22 @@ module.exports.command = async (message) => {
 
     utils.givePoints(message, message.author.id, prize);
   }); */
+};
+
+const win = (message, user, userPoints, bid) => {
+  if (bid < userPoints) {
+    utils.givePoints(message, user.id, bid);
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const lose = (message, user, userPoints, bid) => {
+  if (bid < userPoints) {
+    utils.takePoints(message, user.id, bid);
+    return true;
+  } else {
+    return false;
+  }
 };
