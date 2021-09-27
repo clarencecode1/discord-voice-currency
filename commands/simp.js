@@ -49,7 +49,7 @@ module.exports.command = async (message) => {
   if (donation > userPoints) {
     utils.sendDelete(
       message,
-      `You only have ${userPoints}, you can't donate ${bid}.`
+      `You only have ${userPoints}, you can't donate ${donation}.`
     );
     return;
   }
