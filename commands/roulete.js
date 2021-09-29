@@ -13,7 +13,7 @@ module.exports = {
 };
 
 const MIN_BID = 1;
-const duration = 3;
+const duration = 10;
 const invalidValue = "Invalid bid.";
 const valueTooSmall = `Please specify a value higher than ${MIN_BID}.`;
 const missingArgs = `Missing arguments, try \`${config.prefix}${module.exports.aliases[0]} ${MIN_BID * 2}\``;
