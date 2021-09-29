@@ -13,7 +13,7 @@ module.exports = {
 };
 
 const MIN_BID = 1;
-const duration = 10;
+const duration = 3;
 const invalidValue = "Invalid bid.";
 const valueTooSmall = `Please specify a value higher than ${MIN_BID}.`;
 const missingArgs = `Missing arguments, try \`${config.prefix}${module.exports.aliases[0]} ${MIN_BID * 2}\``;
@@ -39,8 +39,8 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let totalBet = bid;
-  let userPoints = await utils.getPoints(message, message.author.id);
+  let totalBet = 0;
+  let userPoints = {};
 
   let user = message.author;
   let embed = new MessageEmbed()
@@ -110,16 +110,18 @@ module.exports.command = async (message) => {
   };
 
   let players = {};
-  
 
-  reactionsCollection.map((reaction) => {
+  let promises = reactionsCollection.map(async (reaction) => {
     // Iterate over all reactions
     let usersCollection = reaction.users.cache;
     usersCollection = usersCollection.filter((user) => !user.bot);
 
-    usersCollection.map((user) => {
-      if(!players[user.tag]) {
-        players[user.tag] = 0
+    let userPromises = await usersCollection.map(async (user) => {
+      if (!userPoints[user.id]) {
+        userPoints[user.id] = await utils.getPoints(message, user.id);
+      }
+      if (!players[user.tag]) {
+        players[user.tag] = 0;
       }
       // Check colour
       let reactionIsOdd = reaction.emoji.toString() === one;
@@ -128,40 +130,45 @@ module.exports.command = async (message) => {
 
       if (reactionIsColour) {
         if (table[result] === reaction.emoji.toString()) {
-          if (win(message, user, userPoints, bid)) {
+          let prize = reaction.emoji.toString() === green ? 16 * bid : bid;
+          if (win(message, user, userPoints[user.id], bid, prize)) {
             totalBet += bid;
-            let prize = reaction.emoji.toString() === green ? 16 * bid : bid;
-            userPoints += prize;
-            players[user.tag] +=  prize;
+            userPoints[user.id] += prize;
+            players[user.tag] += prize;
           }
         } else {
-          if (lose(message, user, userPoints, bid)) {
+          if (lose(message, user, userPoints[user.id], bid)) {
             totalBet += bid;
             let prize = bid;
-            userPoints -= prize;
-            players[user.tag] -=  prize;
+            userPoints[user.id] -= prize;
+            players[user.tag] -= prize;
           }
         }
       } else if (reactionIsOdd || reactionIsEven) {
         // Check even or odd
         if ((reactionIsOdd && result % 2 === 1) || (reactionIsEven && result % 2 === 0)) {
-          if (win(message, user, userPoints, bid)) {
+          if (win(message, user, userPoints[user.id], bid)) {
             totalBet += bid;
             let prize = bid;
-            userPoints += prize;
+            userPoints[user.id] += prize;
             players[user.tag] += prize;
           }
         } else {
-          if (lose(message, user, userPoints, bid)) {
+          if (lose(message, user, userPoints[user.id], bid)) {
             totalBet += bid;
             let prize = bid;
-            userPoints -= prize;
+            userPoints[user.id] -= prize;
             players[user.tag] -= prize;
           }
         }
       }
     });
+
+    await Promise.all(userPromises)
+
   });
+
+  await Promise.all(promises)
 
   let bigField = ["\n"];
 
@@ -171,6 +178,7 @@ module.exports.command = async (message) => {
 
   bigField = bigField.join("\n");
 
+
   embed = new MessageEmbed()
     .setColor(colours[table[result]])
     .setTitle(`Roulette table, react to bid.`)
@@ -178,6 +186,8 @@ module.exports.command = async (message) => {
     .addField("Result: ", `${table[result]} ${result}`, true)
     .addField(`All players: `, bigField)
     .setThumbnail(initialMessage.author.avatarURL());
+
+  console.log(embed);
 
   // Edit message with results
   initialMessage.edit({ embeds: [embed] });
@@ -240,8 +250,11 @@ module.exports.command = async (message) => {
   }); */
 };
 
-const win = (message, user, userPoints, bid) => {
+const win = (message, user, userPoints, bid, prize = null) => {
   if (bid < userPoints) {
+    if (!prize) {
+      prize = bid;
+    }
     utils.givePoints(message, user.id, bid);
     return true;
   } else {

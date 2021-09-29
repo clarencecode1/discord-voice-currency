@@ -34,6 +34,11 @@ module.exports.command = async (message) => {
     return;
   }
 
+  if(donation < 0) {
+    utils.sendDelete(message, invalidValue);
+    return;
+  }
+
   // Check for mentions
   let mentions = message.mentions.members;
   if (mentions.size) {
