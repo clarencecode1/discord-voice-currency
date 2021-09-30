@@ -5,26 +5,30 @@ const Role = require("../models/Role");
 const utils = require("../utilities/utils");
 const { catchError } = utils;
 const { incorrectSyntax, finished } = require("../utilities/emojis");
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 
-const price = 100;
+const price = 300;
 const duration = 60; // seconds
 
 module.exports = {
-  aliases: ["mute", "buymute", "muteuser"],
+  aliases: ["mute"],
   event: "messageCreate",
 };
 
-const missingArguments =
-  "Invalid syntax. You need to ping the user or put in their uid:";
+const missingArguments = "Invalid syntax. You need to ping the user or put in their uid:";
 
 module.exports.command = async (message) => {
   let user;
   let user_id;
 
+  let yesButton = new MessageButton().setCustomId("yes").setEmoji(finished).setStyle("PRIMARY");
+  let noButton = new MessageButton().setCustomId("no").setEmoji(incorrectSyntax).setStyle("PRIMARY");
+
   // Check for mentions
   let mentions = message.mentions.members;
-  let commandArgs = utils.parseArgs(message.content)._[0];
+  let parsedArgs = utils.parseArgs(message.content);
+  let commandArgs = parsedArgs._[0];
+  let force = parsedArgs.f;
   if (mentions.size) {
     user = mentions.first().user;
     user_id = mentions.first().id;
@@ -38,65 +42,65 @@ module.exports.command = async (message) => {
     return;
   }
 
+  if (force) {
+    // force, just do it
+    muteUser(message, user_id, price);
+    return;
+  }
+
   let embed = new MessageEmbed()
     .setColor("DARK_BUT_NOT_BLACK")
     .setTitle(`Mute ${user.username} for one minute?`)
     .addField("Cost: ", `💵 ${price}`)
     .setThumbnail(user.avatarURL());
-  let initialMessage = await message.channel.send({ embeds: [embed] });
-  initialMessage.react(finished);
-  initialMessage.react(incorrectSyntax);
 
-  const filter = (reaction, user) => {
-    let emoji = reaction.emoji.toString();
-    return (
-      user === message.author &&
-      (emoji === finished || emoji === incorrectSyntax)
-    );
-  };
+  let row = new MessageActionRow().addComponents(yesButton, noButton);
 
-  const reactionCollector = initialMessage.createReactionCollector({
+  let initialMessage = await message.channel.send({ embeds: [embed], components: [row] });
+
+  const filter = (interaction) => interaction.user === message.author;
+
+  const buttonCollector = initialMessage.createMessageComponentCollector({
     filter,
   });
 
-  reactionCollector.on("collect", (reaction) => {
-    reactionCollector.stop(["Collected reaction"]);
-  });
+  buttonCollector.on("collect", async (interaction) => {
+    let selectedButton;
 
-  reactionCollector.on("end", async (collected, reason) => {
-    let emoji = collected.first().emoji.toString();
-    if (emoji === finished) {
-      // Detract from user's points
-      let success = await utils.takePoints(message, message.author.id, price);
-
-      if (success) {
-        // Try to mute them
-        let guildMember = await message.guild.members.fetch(user_id);
-        let voiceState = guildMember.voice;
-        voiceState
-          .setMute(true, `Muted by ${message.member.displayName} for ${price}`)
-          .catch(catchError);
-        initialMessage.delete();
-        utils.sendDelete(
-          message,
-          `Successfully muted user.\nNew balance is ${success}`
-        );
-
-        setTimeout(() => {
-          voiceState.setMute(
-            false,
-            `Muted by ${message.member.displayName} for ${price}`
-          );
-        }, 1000 * duration);
-      } else {
-        utils.sendDelete(message, `Not enough balance.`);
-      }
-    } else {
-      try {
-        initialMessage.delete();
-      } catch (err) {
-        console.log(err);
-      }
+    switch (interaction.customId) {
+      case "yes":
+        selectedButton = yesButton;
+        muteUser(message, user_id, price, initialMessage);
+        break;
+      case "no":
+        selectedButton = noButton;
+        break;
     }
+
+    let row = new MessageActionRow().addComponents(selectedButton);
+
+    await interaction.update({ components: [row] });
+
+    buttonCollector.stop(["Collected reaction"]);
   });
+};
+
+const muteUser = async (message, user_id, price, initialMessage = null) => {
+  // Detract from user's points
+  let success = await utils.takePoints(message, message.author.id, price);
+
+  if (success) {
+    // Try to mute them
+    let guildMember = await message.guild.members.fetch(user_id);
+    let voiceState = guildMember.voice;
+    voiceState.setMute(true, `Muted by ${message.member.displayName} for ${price}`).catch(catchError);
+    if (initialMessage) initialMessage.delete();
+    utils.sendDelete(message, `Successfully muted user.\nNew balance is ${success}`);
+
+    setTimeout(() => {
+      voiceState.setMute(false, `Muted by ${message.member.displayName} for ${price}`);
+    }, 1000 * duration);
+  } else {
+    utils.sendDelete(message, `Not enough balance.`);
+  }
 };

@@ -90,7 +90,6 @@ module.exports.command = async (message) => {
 
     await interaction.update({ components: [row] });
 
-    console.log(`Collected ${interaction.customId}`);
     buttonCollector.stop(["Collected reaction"]);
   });
 

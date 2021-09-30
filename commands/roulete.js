@@ -56,13 +56,6 @@ module.exports.command = async (message) => {
   initialMessage.react(one);
   initialMessage.react(two);
 
-  let result = Math.floor(Math.random() * 37);
-  console.log(result);
-
-  let reactionsCollection = await initialMessage.awaitReactions({
-    time: duration * 1000,
-  });
-
   let table = [
     green, // 0
     red, // 1
@@ -102,6 +95,14 @@ module.exports.command = async (message) => {
     black, // 35
     red, // 36
   ];
+
+  let result = Math.floor(Math.random() * 37);
+  console.log(result);
+  console.log(table[result]);
+
+  let reactionsCollection = await initialMessage.awaitReactions({
+    time: duration * 1000,
+  });
 
   let colours = {
     green: "GREEN",
@@ -164,90 +165,42 @@ module.exports.command = async (message) => {
       }
     });
 
-    await Promise.all(userPromises)
-
+    await Promise.all(userPromises);
   });
 
-  await Promise.all(promises)
+  await Promise.all(promises);
 
-  let bigField = ["\n"];
+  let bigFieldWinners = [];
+  let bigFieldLosers = [];
 
-  Object.keys(players).map((key, index) => {
-    bigField[index] = `**${key}**  -  💵 ${Math.round((players[key] + Number.EPSILON) * 100) / 100}`;
+  Object.keys(players).forEach((key, index) => {
+    let points = players[key];
+    if (points > 0) {
+      bigFieldWinners.push(`**${key}**  -  💵 ${Math.round((points + Number.EPSILON) * 100) / 100}`);
+    } else if (points < 0) {
+      bigFieldLosers.push(`**${key}**  -  💵 ${Math.round((-points + Number.EPSILON) * 100) / 100}`);
+    }
   });
 
-  bigField = bigField.join("\n");
+  if (!bigFieldWinners.length) {
+    bigFieldWinners = "No winners";
+  } else bigFieldWinners = "\n" + bigFieldWinners.join("\n");
 
+  if (!bigFieldLosers.length < 2) {
+    bigFieldLosers = "No losers";
+  } else bigFieldLosers = "\n" + bigFieldLosers.join("\n");
 
   embed = new MessageEmbed()
     .setColor(colours[table[result]])
     .setTitle(`Roulette table, react to bid.`)
     .addField("Total sum played: ", `💵 ${totalBet}`, true)
     .addField("Result: ", `${table[result]} ${result}`, true)
-    .addField(`All players: `, bigField)
+    .addField(`Winners: `, bigFieldWinners)
+    .addField(`Losers: `, bigFieldLosers)
     .setThumbnail(initialMessage.author.avatarURL());
-
-  console.log(embed);
 
   // Edit message with results
   initialMessage.edit({ embeds: [embed] });
-
-  /* reactionCollector.on("end", (collected, reason) => {
-    let rps = {};
-
-    rps[rock] = {
-      wingsAgainst: scissors,
-      losesAgainst: paper,
-      drawsAgainst: rock,
-    };
-
-    rps[paper] = {
-      wingsAgainst: rock,
-      losesAgainst: scissors,
-      drawsAgainst: paper,
-    };
-
-    rps[scissors] = {
-      wingsAgainst: paper,
-      losesAgainst: rock,
-      drawsAgainst: scissors,
-    };
-
-    // Pick random thing
-    let choices = [rock, paper, scissors];
-    let random = Math.floor(Math.random() * 3);
-
-    let choice = choices[random];
-
-    let playerChoice = collected.first().emoji.toString();
-
-    if (rps[playerChoice].wingsAgainst === choice) {
-      // win
-      prize = bid;
-      embed = new MessageEmbed()
-        .setColor("GREEN")
-        .setTitle(`${choice}, you won!`);
-    } else if (rps[playerChoice].losesAgainst === choice) {
-      prize = -bid;
-      embed = new MessageEmbed()
-        .setColor("RED")
-        .setTitle(`${choice}, you lost`);
-    } else {
-      prize = 0;
-      embed = new MessageEmbed()
-        .setColor("DARK_BUT_NOT_BLACK")
-        .setTitle(`${choice}, draw`);
-    }
-
-    embed
-      .setThumbnail(user.avatarURL())
-      .addField("Prize: ", `💵 ${prize}`)
-      .addField("New balance: ", `💵 ${userPoints + prize}`);
-
-    initialMessage.edit({ embeds: [embed] });
-
-    utils.givePoints(message, message.author.id, prize);
-  }); */
 };
 
 const win = (message, user, userPoints, bid, prize = null) => {

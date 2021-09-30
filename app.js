@@ -95,8 +95,6 @@ client.on("messageCreate", (message) => {
 
     if (!client.commands["messageCreate"][command]) {
       // React to message with an emoji indicating the command does not exist
-      console.log("Invalid syntax");
-      message.react(incorrectSyntax);
       return;
     }
 
