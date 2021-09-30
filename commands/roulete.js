@@ -255,7 +255,7 @@ const win = (message, user, userPoints, bid, prize = null) => {
     if (!prize) {
       prize = bid;
     }
-    utils.givePoints(message, user.id, bid);
+    utils.givePoints(message, user.id, prize);
     return true;
   } else {
     return false;
