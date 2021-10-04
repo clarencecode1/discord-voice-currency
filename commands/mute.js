@@ -79,7 +79,7 @@ module.exports.command = async (message) => {
 
     let row = new MessageActionRow().addComponents(selectedButton);
 
-    await interaction.update({ components: [row] });
+    await interaction.update({ components: [row] }).catch((err) => console.log(err));
 
     buttonCollector.stop(["Collected reaction"]);
   });

@@ -76,11 +76,6 @@ module.exports.func = async (oldState, newState) => {
 };
 
 module.exports.command = async (message) => {
-  if (!utils.isTrusted(message)) {
-    utils.react(message, incorrectSyntax);
-    return;
-  }
-
   let finishReaction;
   let guild_id = message.guildId;
   let _server = await Server.findOne({ guild_id });

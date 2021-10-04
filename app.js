@@ -1,20 +1,16 @@
 "use strict";
 
-const {config} = require("./utilities/config");
+const { config } = require("./utilities/config");
 const utils = require("./utilities/utils");
 const { incorrectSyntax } = require("./utilities/emojis");
 const { pullAll } = require("./db/pull");
+const servers = require("./db/json/servers.json");
 // const { importFromCSV } = require("./csv")
 const { Client, Intents } = require("discord.js");
 const connectDB = require("./utilities/mongo");
 
 const myIntents = new Intents();
-myIntents.add(
-  Intents.FLAGS.GUILD_VOICE_STATES,
-  Intents.FLAGS.GUILD_MESSAGES,
-  Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-  Intents.FLAGS.GUILDS
-);
+myIntents.add(Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILDS);
 
 const client = new Client({ intents: myIntents });
 
@@ -71,7 +67,6 @@ client.on("ready", () => {
 
 // Handle all commands
 client.on("messageCreate", (message) => {
-
   /* if(message.content == "import csv" && utils.isTrusted(message)) {
     importFromCSV(message, "statbot_top_member_voice.csv")
   } */
@@ -93,20 +88,24 @@ client.on("messageCreate", (message) => {
       command = split[0].substr(1);
     }
 
+    if (command !== "track") {
+      let guild_id = message.guildId;
+
+      let currentServer = servers.find((server) => server.guild_id === guild_id);
+      if (message.channel.id !== currentServer.bot_channel) {
+        return;
+      }
+    }
+
     if (!client.commands["messageCreate"][command]) {
       // React to message with an emoji indicating the command does not exist
       return;
     }
 
     // Real command, verify if admin
-    if (
-      typeof client.commands["messageCreate"][command].command === "function"
-    ) {
+    if (typeof client.commands["messageCreate"][command].command === "function") {
       // User needs to be an admin
-      if (
-        client.commands["messageCreate"][command].isAdminCommand &&
-        !utils.isTrusted(message)
-      ) {
+      if (client.commands["messageCreate"][command].isAdminCommand && !utils.isTrusted(message)) {
         message.react(incorrectSyntax);
         return;
       }
