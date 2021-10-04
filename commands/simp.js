@@ -5,7 +5,7 @@ const Role = require("../models/Role");
 const utils = require("../utilities/utils");
 const { catchError } = utils;
 const { finished, incorrectSyntax } = require("../utilities/emojis");
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 
 module.exports = {
   aliases: ["simp", "donate"],
@@ -15,12 +15,14 @@ module.exports = {
 const MIN_DONATION = 1;
 const invalidValue = "Invalid sum.";
 const valueTooSmall = `Please specify a value higher than ${MIN_DONATION}.`;
-const missingArgs = `Missing arguments, try \`${config.prefix}${
-  module.exports.aliases[0]
-} ${MIN_DONATION * 2}\``;
+const missingArgs = `Missing arguments, try \`${config.prefix}${module.exports.aliases[0]} ${MIN_DONATION * 2}\``;
 module.exports.command = async (message) => {
   let user;
   let user_id;
+
+  let yesButton = new MessageButton().setCustomId("yes").setEmoji(finished).setStyle("PRIMARY");
+  let noButton = new MessageButton().setCustomId("no").setEmoji(incorrectSyntax).setStyle("PRIMARY");
+
   let split = message.content.split(" ");
   let donation;
   split.map((string) => {
@@ -34,7 +36,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  if(donation < 0) {
+  if (donation < 0) {
     utils.sendDelete(message, invalidValue);
     return;
   }
@@ -52,10 +54,16 @@ module.exports.command = async (message) => {
   let userPoints = await utils.getPoints(message, message.author.id);
 
   if (donation > userPoints) {
-    utils.sendDelete(
-      message,
-      `You only have ${userPoints}, you can't donate ${donation}.`
-    );
+    utils.sendDelete(message, `You only have ${userPoints}, you can't donate ${donation}.`);
+    return;
+  }
+
+  let parsedArgs = utils.parseArgs(message.content);
+  let force = parsedArgs.f;
+
+  if (force) {
+    // force, just do it
+    donate(null, message, donation, user, user_id);
     return;
   }
 
@@ -64,61 +72,64 @@ module.exports.command = async (message) => {
     .setTitle(`Donate 💵 ${donation} to ${user.username}?`)
     .addField("Your balance: ", `💵 ${userPoints}`)
     .setThumbnail(user.avatarURL());
-  let initialMessage = await message.channel.send({ embeds: [embed] });
-  initialMessage.react(finished);
-  initialMessage.react(incorrectSyntax);
 
-  const filter = (reaction, user) => {
-    let emoji = reaction.emoji.toString();
-    return (
-      user === message.author &&
-      (emoji === finished || emoji === incorrectSyntax)
-    );
-  };
+  let row = new MessageActionRow().addComponents(yesButton, noButton);
 
-  const reactionCollector = initialMessage.createReactionCollector({
+  let initialMessage = await message.channel.send({ embeds: [embed], components: [row] });
+
+  const filter = (interaction) => interaction.user === message.author;
+
+  const buttonCollector = initialMessage.createMessageComponentCollector({
     filter,
   });
 
-  reactionCollector.on("collect", (reaction) => {
-    reactionCollector.stop(["Collected reaction"]);
-  });
+  buttonCollector.on("collect", async (interaction) => {
+    let selectedButton;
 
-  reactionCollector.on("end", async (collected, reason) => {
-    let emoji = collected.first().emoji.toString();
-    if (emoji === finished) {
-      // Detract from user's points
-      let success = await utils.takePoints(
-        message,
-        message.author.id,
-        donation
-      );
-
-      // Give points to target
-
-      if (success) {
-        let userNewBalance = await utils.givePoints(message, user_id, donation);
-        let embed = new MessageEmbed()
-          .setColor("GREEN")
-          .setTitle(`Successfully gave 💵 ${donation} to ${user.tag}.`)
-          .addField("Your new balance: ", `💵 ${success}`)
-          .addField(`Their new balance:`, `💵 ${userNewBalance}.`)
-          .setThumbnail(user.avatarURL());
-        initialMessage.edit({ embeds: [embed] });
-        return;
-      } else {
-        let embed = new MessageEmbed()
-          .setColor("RED")
-          .setTitle(`Something went wrong.\nYou probably don't have enough points.`)
-        initialMessage.edit({ embeds: [embed] });
-        return;
-      }
-    } else {
-      try {
-        initialMessage.delete();
-      } catch (err) {
-        console.log(err);
-      }
+    switch (interaction.customId) {
+      case "yes":
+        selectedButton = yesButton;
+        donate(initialMessage, message, donation, user, user_id);
+        break;
+      case "no":
+        selectedButton = noButton;
+        break;
     }
+
+    let row = new MessageActionRow().addComponents(selectedButton);
+
+    await interaction.update({ components: [row] });
+
+    buttonCollector.stop(["Collected reaction"]);
   });
+};
+
+const donate = async (initialMessage, message, donation, user, user_id) => {
+  let success = await utils.takePoints(message, message.author.id, donation);
+
+  // Give points to target
+
+  if (success) {
+    let userNewBalance = await utils.givePoints(message, user_id, donation);
+    let embed = new MessageEmbed()
+      .setColor("GREEN")
+      .setTitle(`Successfully gave 💵 ${donation} to ${user.tag}.`)
+      .addField("Your new balance: ", `💵 ${success}`)
+      .addField(`Their new balance:`, `💵 ${userNewBalance}.`)
+      .setThumbnail(user.avatarURL());
+    if (initialMessage) {
+      initialMessage.edit({ embeds: [embed] });
+    } else {
+      await message.channel.send({ embeds: [embed] });
+    }
+    return;
+  } else {
+    let embed = new MessageEmbed().setColor("RED").setTitle(`Something went wrong.\nYou probably don't have enough points.`);
+    if (initialMessage) {
+      initialMessage.edit({ embeds: [embed] });
+    } else {
+      await message.channel.send({ embeds: [embed] });
+    }
+    return;
+  }
 };

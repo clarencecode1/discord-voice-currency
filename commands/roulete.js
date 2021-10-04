@@ -177,7 +177,7 @@ module.exports.command = async (message) => {
     let points = players[key];
     if (points > 0) {
       bigFieldWinners.push(`**${key}**  -  💵 ${Math.round((points + Number.EPSILON) * 100) / 100}`);
-    } else if (points < 0) {
+    } else {
       bigFieldLosers.push(`**${key}**  -  💵 ${Math.round((-points + Number.EPSILON) * 100) / 100}`);
     }
   });
@@ -186,7 +186,7 @@ module.exports.command = async (message) => {
     bigFieldWinners = "No winners";
   } else bigFieldWinners = "\n" + bigFieldWinners.join("\n");
 
-  if (!bigFieldLosers.length < 2) {
+  if (!bigFieldLosers.length) {
     bigFieldLosers = "No losers";
   } else bigFieldLosers = "\n" + bigFieldLosers.join("\n");
 
