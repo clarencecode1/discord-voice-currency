@@ -92,7 +92,7 @@ client.on("messageCreate", (message) => {
       let guild_id = message.guildId;
 
       let currentServer = servers.find((server) => server.guild_id === guild_id);
-      if (message.channel.id !== currentServer.bot_channel) {
+      if (!utils.isTrusted(message) && message.channel.id !== currentServer.bot_channel) {
         return;
       }
     }

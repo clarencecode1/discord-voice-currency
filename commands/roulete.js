@@ -97,8 +97,6 @@ module.exports.command = async (message) => {
   ];
 
   let result = Math.floor(Math.random() * 37);
-  console.log(result);
-  console.log(table[result]);
 
   let reactionsCollection = await initialMessage.awaitReactions({
     time: duration * 1000,
