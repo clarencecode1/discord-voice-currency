@@ -116,8 +116,10 @@ module.exports.command = async (message) => {
     usersCollection = usersCollection.filter((user) => !user.bot);
 
     let userPromises = await usersCollection.map(async (user) => {
+      let currentBid;
       if (!userPoints[user.id]) {
         userPoints[user.id] = await utils.getPoints(message, user.id);
+        currentBid = parseInt(Math.min(bid, userPoints[user.id]));
       }
       if (!players[user.tag]) {
         players[user.tag] = 0;
@@ -129,16 +131,16 @@ module.exports.command = async (message) => {
 
       if (reactionIsColour) {
         if (table[result] === reaction.emoji.toString()) {
-          let prize = reaction.emoji.toString() === green ? 16 * bid : bid;
-          if (win(message, user, userPoints[user.id], bid, prize)) {
-            totalBet += bid;
+          let prize = reaction.emoji.toString() === green ? 16 * currentBid : currentBid;
+          if (win(message, user, userPoints[user.id], currentBid, prize)) {
+            totalBet += currentBid;
             userPoints[user.id] += prize;
             players[user.tag] += prize;
           }
         } else {
-          if (lose(message, user, userPoints[user.id], bid)) {
-            totalBet += bid;
-            let prize = bid;
+          if (lose(message, user, userPoints[user.id], currentBid)) {
+            totalBet += currentBid;
+            let prize = currentBid;
             userPoints[user.id] -= prize;
             players[user.tag] -= prize;
           }
@@ -146,16 +148,16 @@ module.exports.command = async (message) => {
       } else if (reactionIsOdd || reactionIsEven) {
         // Check even or odd
         if ((reactionIsOdd && result % 2 === 1) || (reactionIsEven && result % 2 === 0)) {
-          if (win(message, user, userPoints[user.id], bid)) {
-            totalBet += bid;
-            let prize = bid;
+          if (win(message, user, userPoints[user.id], currentBid)) {
+            totalBet += currentBid;
+            let prize = currentBid;
             userPoints[user.id] += prize;
             players[user.tag] += prize;
           }
         } else {
-          if (lose(message, user, userPoints[user.id], bid)) {
-            totalBet += bid;
-            let prize = bid;
+          if (lose(message, user, userPoints[user.id], currentBid)) {
+            totalBet += currentBid;
+            let prize = currentBid;
             userPoints[user.id] -= prize;
             players[user.tag] -= prize;
           }
@@ -202,7 +204,7 @@ module.exports.command = async (message) => {
 };
 
 const win = (message, user, userPoints, bid, prize = null) => {
-  if (bid < userPoints) {
+  if (bid <= userPoints) {
     if (!prize) {
       prize = bid;
     }
@@ -214,7 +216,7 @@ const win = (message, user, userPoints, bid, prize = null) => {
 };
 
 const lose = (message, user, userPoints, bid) => {
-  if (bid < userPoints) {
+  if (bid <= userPoints) {
     utils.takePoints(message, user.id, bid);
     return true;
   } else {

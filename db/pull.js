@@ -15,3 +15,5 @@ module.exports.pullAll = (async) => {
   pullModel(rolesFile, Role, "roles");
   pullModel(serverFile, Server, "servers");
 };
+
+module.exports.pullModel = pullModel;

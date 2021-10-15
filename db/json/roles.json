@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "_id": "6168bc7afe1a8063238a910f",
+    "guild_id": "883451820498882580",
+    "role_id": "889304376206823524",
+    "name": "Orange",
+    "price": 10000,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
+  },
+  {
+    "_id": "6168bc9b93807efca9ecead9",
+    "guild_id": "883451820498882580",
+    "role_id": "889304377494483055",
+    "name": "Gold",
+    "price": 10000,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
+  }
+]
