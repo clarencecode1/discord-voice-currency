@@ -24,9 +24,9 @@ module.exports.command = async (message) => {
   let indexStart = 0;
 
   let roles = _roles.slice(indexStart, indexStart + ROLES_PER_PAGE);
-  let embed = generateEmbed(message, roles);
+  let embed = generateEmbed(message, roles, indexStart, _roles.length);
 
-  let row = new MessageActionRow().addComponents(leftButton, rightButton);
+  let row = new MessageActionRow().addComponents(leftButton, rightButton, new MessageButton().setCustomId("number").setEmoji(numbers[0]).setStyle("SECONDARY"));
   let initialMessage = await message.channel.send({ embeds: [embed], components: [row] });
 
   const filter = (interaction) => interaction.user === message.author;
@@ -48,7 +48,7 @@ module.exports.command = async (message) => {
     }
 
     roles = _roles.slice(indexStart, indexStart + ROLES_PER_PAGE);
-    embed = generateEmbed(message, roles);
+    embed = generateEmbed(message, roles, indexStart, _roles.length);
     await initialMessage.edit({ embeds: [embed] }).catch((err) => console.log(err));
     row = new MessageActionRow().addComponents(
       leftButton,
@@ -62,8 +62,8 @@ module.exports.command = async (message) => {
   });
 };
 
-const generateEmbed = (message, roles) => {
-  let embed = new MessageEmbed().setColor("DARK_BUT_NOT_BLACK").setTitle(`${message.guild.name} shop`);
+const generateEmbed = (message, roles, indexStart, rolesLength) => {
+  let embed = new MessageEmbed().setColor("DARK_BUT_NOT_BLACK").setTitle(`${message.guild.name} shop`).setFooter(`Showing ${indexStart + 1} to ${indexStart + ROLES_PER_PAGE} out of ${rolesLength} roles`);
 
   roles.forEach(({ guild_id, role_id, name, price, stock, multiplier }) => {
     if (guild_id === message.guildId) {
