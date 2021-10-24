@@ -217,7 +217,7 @@ const win = (message, user, userPoints, bid, prize = null) => {
 
 const lose = (message, user, userPoints, bid) => {
   if (bid <= userPoints) {
-    utils.takePoints(message, user.id, bid);
+    utils.takePoints(user.id, bid);
     return true;
   } else {
     return false;

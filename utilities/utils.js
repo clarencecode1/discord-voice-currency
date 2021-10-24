@@ -2,11 +2,7 @@ const config = require("./config").config;
 const { finished, incorrectSyntax } = require("./emojis");
 const User = require("../models/User");
 
-module.exports.sendDelete = async (
-  message,
-  string,
-  time = config.message_life * 1000
-) => {
+module.exports.sendDelete = async (message, string, time = config.message_life * 1000) => {
   let _msg = await message.channel.send(string);
 
   setTimeout(() => {
@@ -138,7 +134,7 @@ module.exports.givePoints = async (message, user_id, points) => {
   return _user.points;
 };
 
-module.exports.takePoints = async (message, user_id, points) => {
+module.exports.takePoints = async (user_id, points) => {
   let _user = await User.findOne({ user_id });
 
   // If they do not exist, based on the fact that they have 0 points they probably can't afford it

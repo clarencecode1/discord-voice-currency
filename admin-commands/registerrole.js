@@ -8,7 +8,7 @@ const { MessageEmbed, MessageCollector } = require("discord.js");
 const { pullModel } = require("../db/pull");
 
 module.exports = {
-  aliases: ["registerrole", "createrole"],
+  aliases: ["registerrole", "rr"],
   event: "messageCreate",
 };
 
@@ -17,15 +17,16 @@ const missingArguments = "Invalid syntax. You need to pass in these arguments:";
 module.exports.command = async (message) => {
   // guild_id, role_id, name, price, stock, multiplier, permissions;
 
+  let embedColor = "DARK_BUT_NOT_BLACK";
   let guild_id = message.guildId;
   let role_id;
   let role;
   let name;
-  let price;
-  let stock;
-  let multiplier;
+  let price = 10000;
+  let stock = -1;
+  let multiplier = 1;
 
-  let embed = new MessageEmbed().setColor("DARK_BUT_NOT_BLACK").setTitle(`Register a new role`).addField("Role id", `Type in the ID of the role.`);
+  let embed = new MessageEmbed().setColor(embedColor).setTitle(`Register a new role`).addField("Role id", `Type in the ID of the role.`);
   let initialMessage = await message.channel.send({ embeds: [embed] });
   const filter = (m) => m.author === message.author;
   let messageCollector = new MessageCollector(message.channel, { filter, time: 60 * 1000 });
@@ -41,9 +42,10 @@ module.exports.command = async (message) => {
           sendDelete(message, `Couldn't find the roles. The id must be incorrect.`);
         } else {
           name = role.name;
+          embedColor = role.hexColor;
           role_id = m.content;
           embed = new MessageEmbed()
-            .setColor("DARK_BUT_NOT_BLACK")
+            .setColor(embedColor)
             .setTitle(`Register a new role`)
             .addField("Role id", role_id)
             .addField("Name", name)
@@ -60,7 +62,7 @@ module.exports.command = async (message) => {
       if (!isNaN(tempPrice)) {
         price = tempPrice;
         embed = new MessageEmbed()
-          .setColor("DARK_BUT_NOT_BLACK")
+          .setColor(embedColor)
           .setTitle(`Register a new role`)
           .addField("Role id", role_id)
           .addField("Name", name)
@@ -77,7 +79,7 @@ module.exports.command = async (message) => {
       if (!isNaN(tempStock)) {
         stock = tempStock;
         embed = new MessageEmbed()
-          .setColor("DARK_BUT_NOT_BLACK")
+          .setColor(embedColor)
           .setTitle(`Register a new role`)
           .addField("Role id", role_id)
           .addField("Name", name)
@@ -111,6 +113,10 @@ module.exports.command = async (message) => {
         sendDelete(message, `Multiplier is not a valid integer`);
       }
     }
+
+    if (role_id && name && price && stock && multiplier) {
+      messageCollector.stop("Finished collecting.");
+    }
   });
 
   messageCollector.on("end", async (collected, reason) => {
@@ -141,10 +147,11 @@ module.exports.command = async (message) => {
         sendDelete(message, `Updating role...`);
       }
 
-      _role.save().catch((err) => console.log(err));
+      await _role.save().catch((err) => console.log(err));
       sendDelete(message, `Finished operation.`);
       // This here pulls all roles instead of appending the one that we just added, really inefficient but I'm lazy and this command won't be used often.
-      pullModel();
+      const rolesFile = "./db/json/roles.json";
+      pullModel(rolesFile, Role, "roles");
     }
   });
 };

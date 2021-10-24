@@ -105,7 +105,7 @@ module.exports.command = async (message) => {
 };
 
 const donate = async (initialMessage, message, donation, user, user_id) => {
-  let success = await utils.takePoints(message, message.author.id, donation);
+  let success = await utils.takePoints(message.author.id, donation);
 
   // Give points to target
 
