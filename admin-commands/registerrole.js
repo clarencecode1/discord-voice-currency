@@ -22,9 +22,9 @@ module.exports.command = async (message) => {
   let role_id;
   let role;
   let name;
-  let price = 10000;
-  let stock = -1;
-  let multiplier = 1;
+  let price;
+  let stock;
+  let multiplier;
 
   let embed = new MessageEmbed().setColor(embedColor).setTitle(`Register a new role`).addField("Role id", `Type in the ID of the role.`);
   let initialMessage = await message.channel.send({ embeds: [embed] });
