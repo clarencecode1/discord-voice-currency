@@ -39,8 +39,10 @@ module.exports.command = async (message) => {
       return;
     }
     user = mentions.first().user;
-    if (user.bot) utils.sendDelete(message, botError);
-    return;
+    if (user.bot) {
+      utils.sendDelete(message, botError);
+      return;
+    }
     user_id = mentions.first().id;
   } else {
     utils.sendDelete(message, missingArguments);
