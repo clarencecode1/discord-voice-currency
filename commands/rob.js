@@ -12,6 +12,7 @@ const onCooldownTwo = "No, I won't tell you for how long.";
 const missingArguments = "You have to ping the user you want to rob.";
 const invalidMention = "You can't rob yourself.";
 const alreadyBeingRobbed = "This user is already being robbed.";
+const botError = "You cannot rob bots.";
 
 const price = 5;
 const DELAY = 5;
@@ -38,6 +39,8 @@ module.exports.command = async (message) => {
       return;
     }
     user = mentions.first().user;
+    if (user.bot) utils.sendDelete(message, botError);
+    return;
     user_id = mentions.first().id;
   } else {
     utils.sendDelete(message, missingArguments);
