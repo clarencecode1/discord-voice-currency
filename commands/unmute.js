@@ -82,7 +82,7 @@ module.exports.command = async (message) => {
 
 const unmuteUser = async (message, user_id, price, initialMessage = null) => {
   // Detract from user's points
-  let success = await utils.takePoints(message.author.id, price);
+  let success = await utils.takePoints(message.author.id, price, message.guildId);
 
   if (success) {
     // Try to mute them

@@ -82,14 +82,14 @@ module.exports.getUser = async (message, id) => {
   return message.client.users.fetch(id);
 };
 
-module.exports.getPoints = async (message, user_id) => {
+module.exports.getPoints = async (message, user_id, guild_id) => {
   // Look for the user with the given uid
 
-  let _user = await User.findOne({ user_id });
+  let _user = await User.findOne({ user_id, guild_id });
 
   if (!_user) {
     _user = new User({
-      guild_id: message.guildId,
+      guild_id,
       user_id: user_id,
       points: 0,
       is_active: false,
@@ -100,17 +100,15 @@ module.exports.getPoints = async (message, user_id) => {
   return _user.points;
 };
 
-module.exports.givePoints = async (message, user_id, points) => {
+module.exports.givePoints = async (user_id, points, guild_id) => {
   let finishReaction;
   // Look for the user with the given uid
 
-  let _user = await User.findOne({ user_id });
+  let _user = await User.findOne({ user_id, guild_id });
 
-  // If they do not exist err on believing the admin and create the user without checking if they are actually in the guild.
-  // I could do this later but I'm lazy
   if (!_user) {
     _user = new User({
-      guild_id: message.guildId,
+      guild_id,
       user_id: user_id,
       points: parseInt(points),
       is_active: false,
@@ -134,8 +132,8 @@ module.exports.givePoints = async (message, user_id, points) => {
   return _user.points;
 };
 
-module.exports.takePoints = async (user_id, points) => {
-  let _user = await User.findOne({ user_id });
+module.exports.takePoints = async (user_id, points, guild_id) => {
+  let _user = await User.findOne({ user_id, guild_id });
 
   // If they do not exist, based on the fact that they have 0 points they probably can't afford it
   if (!_user) {
@@ -156,6 +154,53 @@ module.exports.takePoints = async (user_id, points) => {
     console.log(err);
     return false;
   }
+};
+
+module.exports.updatePoints = async (user_id, guild, oldState = null) => {
+  let points = 0;
+  let guild_id = guild.id;
+  let _user = await User.findOne({ user_id, guild_id });
+  let voiceState = await guild.members.fetch(user_id);
+  voiceState = voiceState.voice;
+  if (!oldState) oldState = voiceState;
+
+  // If they are not, create a new database and give them 0 points
+  if (!_user) {
+    _user = new User({
+      guild_id,
+      user_id,
+      points,
+      is_active: !!voiceState.channel,
+      is_active_since: Date.now(),
+    });
+    await _user.save().catch((err) => console.log(err));
+    return Math.round((points + Number.EPSILON) * 100) / 100;
+  } else {
+    // They already are in db
+    // Assign points if they were previously active
+    if (_user.is_active) {
+      let multiplier = 1;
+
+      multiplier += oldState.selfVideo ? 0.3 : 0;
+      multiplier -= oldState.deaf ? 0.3 : 0;
+      let newPoints = multiplier * this.differenceInMinutes(_user.is_active_since, Date.now());
+      _user.points += newPoints;
+    }
+    // TODO: INCORPORATE ROLES FOR POINT MULTIPLIERS
+
+    // Reassign active value
+    _user.is_active = !!voiceState.channel;
+    _user.is_active_since = Date.now();
+    points = _user.points;
+  }
+  await _user.save().catch((err) => console.log(err));
+  return Math.round((points + Number.EPSILON) * 100) / 100;
+};
+
+module.exports.differenceInMinutes = (oldDate, newDate) => {
+  const difference = Math.abs(newDate - oldDate);
+  let points = difference / 1000 / 60;
+  return Math.round((points + Number.EPSILON) * 100) / 100;
 };
 
 module.exports.catchError = (err) => {

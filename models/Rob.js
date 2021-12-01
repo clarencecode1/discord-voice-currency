@@ -7,19 +7,23 @@ const robSchema = new Schema({
     required: true,
     index: true,
   },
-  from_id: {
+  robber_id: {
     type: String,
     required: true,
     index: true,
   },
-  to_id: {
-    type: Number,
+  victim_id: {
+    type: String,
     required: true,
     default: 0,
     index: true,
   },
   started_at: {
     type: Date,
+    required: true,
+  },
+  victim_balance_at_start: {
+    type: Number,
     required: true,
   },
 });

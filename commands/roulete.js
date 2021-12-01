@@ -118,7 +118,7 @@ module.exports.command = async (message) => {
     let userPromises = await usersCollection.map(async (user) => {
       let currentBid;
       if (!userPoints[user.id]) {
-        userPoints[user.id] = await utils.getPoints(message, user.id);
+        userPoints[user.id] = await utils.updatePoints(user.id, message.guild);
         currentBid = parseInt(Math.min(bid, userPoints[user.id]));
       }
       if (!players[user.tag]) {
@@ -208,7 +208,7 @@ const win = (message, user, userPoints, bid, prize = null) => {
     if (!prize) {
       prize = bid;
     }
-    utils.givePoints(message, user.id, prize);
+    utils.givePoints(user.id, prize, message.guildId);
     return true;
   } else {
     return false;
@@ -217,7 +217,7 @@ const win = (message, user, userPoints, bid, prize = null) => {
 
 const lose = (message, user, userPoints, bid) => {
   if (bid <= userPoints) {
-    utils.takePoints(user.id, bid);
+    utils.takePoints(user.id, bid, message.guildId);
     return true;
   } else {
     return false;

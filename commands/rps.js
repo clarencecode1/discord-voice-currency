@@ -44,7 +44,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let userPoints = await utils.getPoints(message, message.author.id);
+  let userPoints = await utils.updatePoints(message.author.id, message.guild);
 
   if (bid > userPoints) {
     utils.sendDelete(message, `You only have ${userPoints}, you can't bet ${bid}.`);
@@ -141,6 +141,6 @@ module.exports.command = async (message) => {
 
     initialMessage.edit({ embeds: [embed] });
 
-    utils.givePoints(message, message.author.id, prize);
+    utils.givePoints(message.author.id, prize, message.guildId);
   });
 };

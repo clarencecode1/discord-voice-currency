@@ -17,7 +17,7 @@ module.exports.command = async (message) => {
   let noButton = new MessageButton().setCustomId("no").setEmoji(incorrectSyntax).setStyle("PRIMARY");
 
   let guildId = message.guildId;
-  let roleName = utils.parseArgs(message.content)._.join(' ');
+  let roleName = utils.parseArgs(message.content)._.join(" ");
 
   let roles = jsonfile.readFileSync("./db/json/roles.json");
   let role = roles.find(({ guild_id, name }) => guild_id === guildId && name.toLowerCase() === roleName.toLowerCase());
@@ -85,7 +85,7 @@ const buyRole = async (message, role, price) => {
     utils.sendDelete(message, `You already have the ${role.name} role.`);
     return;
   }
-  let success = await utils.takePoints(user_id, price);
+  let success = await utils.takePoints(user_id, price, message.guildId);
 
   if (success) {
     utils.sendDelete(message, `Successfully bought ${role.name}.`);

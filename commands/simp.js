@@ -51,7 +51,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let userPoints = await utils.getPoints(message, message.author.id);
+  let userPoints = await utils.updatePoints(message.author.id, message.guild);
 
   if (donation > userPoints) {
     utils.sendDelete(message, `You only have ${userPoints}, you can't donate ${donation}.`);
@@ -105,12 +105,12 @@ module.exports.command = async (message) => {
 };
 
 const donate = async (initialMessage, message, donation, user, user_id) => {
-  let success = await utils.takePoints(message.author.id, donation);
+  let success = await utils.takePoints(message.author.id, donation, message.guildId);
 
   // Give points to target
 
   if (success) {
-    let userNewBalance = await utils.givePoints(message, user_id, donation);
+    let userNewBalance = await utils.givePoints(user_id, donation, message.guildId);
     let embed = new MessageEmbed()
       .setColor("GREEN")
       .setTitle(`Successfully gave 💵 ${donation} to ${user.tag}.`)

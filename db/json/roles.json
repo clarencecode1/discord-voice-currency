@@ -168,5 +168,35 @@
     "stock": -1,
     "multiplier": 1,
     "__v": 0
+  },
+  {
+    "_id": "617625873f93c460a95443fd",
+    "guild_id": "883451820498882580",
+    "role_id": "902036756466118667",
+    "name": "Pink",
+    "price": 10000,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
+  },
+  {
+    "_id": "617c9e88b11679b11be49358",
+    "guild_id": "883451820498882580",
+    "role_id": "898316334683795487",
+    "name": "Embed Perms",
+    "price": 22500,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
+  },
+  {
+    "_id": "617c9eceb11679b11be49365",
+    "guild_id": "883451820498882580",
+    "role_id": "902036290420224041",
+    "name": "Bot Log Viewer",
+    "price": 10000,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
   }
 ]

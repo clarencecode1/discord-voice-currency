@@ -7,16 +7,7 @@ const { incorrectSyntax } = require("../utilities/emojis");
 const { MessageEmbed } = require("discord.js");
 
 module.exports = {
-  aliases: [
-    "give",
-    "givepoints",
-    "add",
-    "addpoints",
-    "givebal",
-    "givebalance",
-    "addbal",
-    "addbalance",
-  ],
+  aliases: ["give", "givepoints", "add", "addpoints", "givebal", "givebalance", "addbal", "addbalance"],
   event: "messageCreate",
 };
 
@@ -51,9 +42,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  utils.givePoints(message, commandArgs.u, commandArgs.p);
+  utils.givePoints(commandArgs.u, commandArgs.p, message.guildId);
 
-  console.log(
-    `User ${message.member.displayName} gave ${commandArgs.p} points to ${commandArgs.u}`
-  );
+  console.log(`User ${message.member.displayName} gave ${commandArgs.p} points to ${commandArgs.u}`);
 };

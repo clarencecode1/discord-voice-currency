@@ -13,11 +13,7 @@ module.exports = {
 
 const alreadyIsTracked = `This server is already being tracked, run \`${config.prefix}untrack\` to untrack.`;
 
-const differenceInSeconds = (oldDate, newDate) => {
-  const difference = Math.abs(newDate - oldDate);
-  let points = (difference / 1000 / 60);
-  return Math.round((points + Number.EPSILON) * 100) / 100
-};
+
 
 const isActive = (voiceState) => {
   // Double negation to convert to boolean, might be confusing at first.
@@ -38,41 +34,7 @@ module.exports.func = async (oldState, newState) => {
 
   let user_id = newState.id;
 
-  // Check if user is already in database
-  let _user = await User.findOne({ guild_id, user_id });
-
-  // If they are not, create a new database and give them 0 points
-  if (!_user) {
-    _user = new User({
-      guild_id,
-      user_id,
-      points: 0,
-      is_active: isActive(newState),
-      is_active_since: Date.now(),
-    });
-  } else {
-    // They are already are in db
-
-    // Assign points if they were previously active
-    if (_user.is_active) {
-      let multiplier = 1
-
-      multiplier += oldState.selfVideo ? .3 : 0
-      multiplier -= oldState.deaf ? .3 : 0
-      let newPoints = multiplier * differenceInSeconds(_user.is_active_since, Date.now());
-      _user.points += newPoints;
-    }
-    // TODO: INCORPORATE ROLES FOR POINT MULTIPLIERS
-
-    // Reassign active value
-    _user.is_active = isActive(newState);
-    _user.is_active_since = Date.now();
-  }
-  try {
-    await _user.save();
-  } catch (err) {
-    console.log(err);
-  }
+  utils.updatePoints(user_id, newState.guild, oldState);
 };
 
 module.exports.command = async (message) => {

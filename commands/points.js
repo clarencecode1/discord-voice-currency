@@ -39,27 +39,7 @@ module.exports.command = async (message) => {
     user_id = user.id;
   }
 
-  // Check if user is already in database
-  let _user = await User.findOne({ user_id });
-
-  // If they are not, create a new database and give them 0 points
-  if (!_user) {
-    _user = new User({
-      guild_id : message.guildId,
-      user_id,
-      points,
-      is_active: false,
-      is_active_since: Date.now(),
-    });
-
-    try {
-      await _user.save();
-    } catch (err) {
-      console.log(err);
-    }
-  } else {
-    points = _user.points;
-  }
+  points = await utils.updatePoints(user_id, message.guild);
 
   // Construct embed
   let embed = new MessageEmbed()
