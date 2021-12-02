@@ -7,7 +7,7 @@ const utils = require("../utilities/utils");
 const { incorrectSyntax, finished } = require("../utilities/emojis");
 const { MessageCollector, MessageEmbed } = require("discord.js");
 
-const onCooldown = "You're on cooldown.";
+const onCooldown = "You're on cooldown, so it will cost 5 to start robbing someone.";
 const onCooldownTwo = "No, I won't tell you for how long.";
 const missingArguments = "You have to ping the user you want to rob.";
 const invalidMention = "You can't rob yourself.";
@@ -57,13 +57,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let userPoints = await utils.updatePoints(message.author.id, message.guild);
   let victimPoints = await utils.updatePoints(user_id, message.guild);
-
-  if (price > userPoints) {
-    utils.sendDelete(message, `You only have ${userPoints}, robbing costs ${price}.`);
-    return;
-  }
 
   _rob = await Rob.findOne({ guild_id, victim_id: user_id });
 
@@ -73,9 +67,16 @@ module.exports.command = async (message) => {
     if (_robCd) {
       utils.sendDelete(message, onCooldown);
       setTimeout(() => {
-        utils.sendDelete(message, onCooldownTwo);
+        if (Math.floor(Math.random() * 5) >= 4) utils.sendDelete(message, onCooldownTwo);
       }, 1000);
-      return;
+
+      let success = await utils.takePoints(message.author.id, price, message.guildId);
+
+      if (!success) {
+        utils.sendDelete(message, `You don't have enough points, robbing costs ${price}.`);
+        return;
+      } else {
+      }
     }
 
     _rob = new Rob({
@@ -132,7 +133,7 @@ const endRob = async (from_id, to_id, message, rob, initialMessage = null) => {
 
   let fromUser = await utils.getUser(message, from_id);
   let toUser = await utils.getUser(message, to_id);
-  let fromBalance = await utils.getPoints(message, from_id, message.guild_id);
+  let fromBalance = await utils.getPoints(message, from_id, message.guildId);
   points = Math.min(points, fromBalance);
   let fromNewBalance = await utils.givePoints(from_id, -points, message.guildId);
 
