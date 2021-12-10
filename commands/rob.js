@@ -13,6 +13,7 @@ const missingArguments = "You have to ping the user you want to rob.";
 const invalidMention = "You can't rob yourself.";
 const alreadyBeingRobbed = "This user is already being robbed.";
 const botError = "You cannot rob bots.";
+const notBeingRobbed = "Nobody is robbing you.";
 
 const price = 5;
 const DELAY = 5;
@@ -34,18 +35,29 @@ module.exports.command = async (message) => {
   // Check for mentions
   let mentions = message.mentions.members;
   if (mentions.size) {
+    user = mentions.first().user;
     if (mentions.first().user === message.author) {
       utils.sendDelete(message, invalidMention);
       return;
     }
-    user = mentions.first().user;
     if (user.bot) {
       utils.sendDelete(message, botError);
       return;
     }
     user_id = mentions.first().id;
   } else {
-    utils.sendDelete(message, missingArguments);
+    let _rob = await Rob.findOne({ guild_id, victim_id: message.author.id });
+    if (_rob) {
+      let robber = await utils.getUser(message, _rob.robber_id);
+      let embed = new MessageEmbed()
+        .setColor("GREEN")
+        .setTitle(`You are being robbed by ${robber.tag}`)
+        .addField("Type this in order to counter the rob", `${config.prefix}${module.exports.aliases[0]} @${robber.tag}`)
+        .setThumbnail(robber.avatarURL());
+      await message.channel.send({ embeds: [embed] });
+    } else {
+      utils.sendDelete(message, notBeingRobbed);
+    }
     return;
   }
 
@@ -90,10 +102,10 @@ module.exports.command = async (message) => {
 
     let embed = new MessageEmbed()
       .setColor("GREEN")
-      .setTitle(`${message.author.tag} has started robbing ${user.tag}`)
+      .setTitle(`${message.author.tag} has started robbing you.`)
       .addField("Type this in order to counter the rob", `${config.prefix}${module.exports.aliases[0]} @${message.author.tag}`)
-      .setThumbnail(user.avatarURL());
-    await message.channel.send({ embeds: [embed] });
+      .setThumbnail(message.author.avatarURL());
+    await message.channel.send({ content: `<@${user.id}>`, embeds: [embed] });
     _robCd = new RobCd({
       guild_id,
       robber_id: message.author.id,
