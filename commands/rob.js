@@ -146,7 +146,7 @@ const endRob = async (from_id, to_id, message, rob, initialMessage = null) => {
   let fromUser = await utils.getUser(message, from_id);
   let toUser = await utils.getUser(message, to_id);
   let fromBalance = await utils.getPoints(message, from_id, message.guildId);
-  points = Math.min(points, fromBalance);
+  points = Math.min(points, Math.max(fromBalance, 0));
   let fromNewBalance = await utils.givePoints(from_id, -points, message.guildId);
 
   let toNewBalance = await utils.givePoints(to_id, points, message.guildId);
