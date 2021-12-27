@@ -56,7 +56,7 @@ module.exports.command = async (message) => {
 
   if (force) {
     // force, just do it
-    muteUsers(message, members, exceptions, price);
+    muteUsers(message, members, exceptions, fullPrice);
     return;
   }
 
@@ -82,7 +82,7 @@ module.exports.command = async (message) => {
     switch (interaction.customId) {
       case "yes":
         selectedButton = yesButton;
-        muteUsers(message, members, exceptions, price, initialMessage);
+        muteUsers(message, members, exceptions, fullPrice);
         break;
       case "no":
         selectedButton = noButton;
@@ -98,32 +98,31 @@ module.exports.command = async (message) => {
 };
 
 const muteUser = async (message, user_id, price) => {
-  // Detract from user's points
-  let success = await utils.takePoints(message.author.id, price, message.guildId);
+  // Try to mute them
+  let guildMember = await message.guild.members.fetch(user_id);
+  let voiceState = guildMember.voice;
+  voiceState.setMute(true, `Muted by ${message.member.displayName} for ${price}`).catch(catchError);
+  utils.sendDelete(message, `Successfully muted ${guildMember.displayName}`);
+
+  setTimeout(() => {
+    console.log(`Unmuted ${guildMember.displayName} for ${price}`);
+    voiceState.setMute(false, `Muted by ${message.member.displayName} for ${price}`);
+  }, 1000 * duration);
+  return true;
+};
+
+const muteUsers = async (message, members, exceptions, price) => {
+  let success = await utils.takePoints(message.author.id, parseInt(price), message.guildId);
 
   if (success) {
-    // Try to mute them
-    let guildMember = await message.guild.members.fetch(user_id);
-    let voiceState = guildMember.voice;
-    voiceState.setMute(true, `Muted by ${message.member.displayName} for ${price}`).catch(catchError);
+    members.map((member) => {
+      if (exceptions.includes(member.id)) return true;
+      if (member.bot) return true; // This is redundant but I'll leave it in
+      muteUser(message, member.id, parseInt(price));
+    });
     utils.sendDelete(message, `Successfully muted user.\nNew balance is ${success}`);
-
-    setTimeout(() => {
-      console.log(`Unmuted ${guildMember.displayName} for ${price}`);
-      voiceState.setMute(false, `Muted by ${message.member.displayName} for ${price}`);
-    }, 1000 * duration);
-    return true;
   } else {
     utils.sendDelete(message, `Not enough balance.`);
     return false;
   }
-};
-
-const muteUsers = async (message, members, exceptions, price) => {
-  members.map((member) => {
-    if (exceptions.includes(member.id)) return true;
-    if (member.bot) return true; // This is redundant but I'll leave it in
-    muteUser(message, member.id, parseInt(price));
-    price *= MULTIPLIER;
-  });
 };
