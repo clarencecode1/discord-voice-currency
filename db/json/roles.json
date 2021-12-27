@@ -198,5 +198,15 @@
     "stock": -1,
     "multiplier": 1,
     "__v": 0
+  },
+  {
+    "_id": "61c544f2c98c643bb9315fc4",
+    "guild_id": "883451820498882580",
+    "role_id": "923780673997795338",
+    "name": "VC Locker",
+    "price": 100000,
+    "stock": -1,
+    "multiplier": 1,
+    "__v": 0
   }
 ]

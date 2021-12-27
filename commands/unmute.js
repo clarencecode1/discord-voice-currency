@@ -7,7 +7,7 @@ const { catchError } = utils;
 const { incorrectSyntax, finished } = require("../utilities/emojis");
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 
-const price = 35;
+const price = 1;
 
 module.exports = {
   aliases: ["unmute"],
