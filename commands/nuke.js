@@ -9,7 +9,7 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 
 const price = 50;
 const MULTIPLIER = 1.1;
-const duration = 30; // seconds
+let duration = 30; // seconds
 
 module.exports = {
   aliases: ["nuke", "muteall"],
@@ -29,6 +29,8 @@ module.exports.command = async (message) => {
   let exceptions = [message.author.id];
 
   let _mentions = message.mentions.members;
+  console.log(channel.name);
+  if (channel.name === "Daniel's VC") duration = 5;
   let members = channel.members;
 
   _mentions.map((mention) => {
@@ -60,11 +62,7 @@ module.exports.command = async (message) => {
     return;
   }
 
-  let embed = new MessageEmbed()
-    .setColor("DARK_BUT_NOT_BLACK")
-    .setTitle(`Mute everyone in your vc for 30 seconds?`)
-    .addField("Cost: ", `💵 ${fullPrice}`)
-    .setThumbnail(message.author.avatarURL());
+  let embed = new MessageEmbed().setColor("DARK_BUT_NOT_BLACK").setTitle(`Mute everyone in your vc for 30 seconds?`).addField("Cost: ", `💵 ${fullPrice}`).setThumbnail(message.author.avatarURL());
 
   let row = new MessageActionRow().addComponents(yesButton, noButton);
 
